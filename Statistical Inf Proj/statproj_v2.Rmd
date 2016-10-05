@@ -1,0 +1,56 @@
+---
+output: pdf_document
+---
+#Title: Statistical Inference Course Project: Part 2
+####Author: David Brown
+
+###The Effect of Vitamin C on Tooth Growth in Guinea Pigs
+The response is the length of odontoblasts (cells responsible for tooth growth) in 60 guinea pigs. Each animal received one of three dose levels of vitamin C (0.5, 1, and 2 mg/day) by one of two delivery methods, (orange juice or ascorbic acid (a form of vitamin C and coded as VC).
+
+```{r, echo=FALSE}
+library(ggplot2)
+library(grid)
+library(gridExtra)
+```
+
+
+```{r, echo=FALSE}
+data("ToothGrowth")
+dat <- ToothGrowth
+```
+```{r, echo=FALSE, warning=FALSE}
+point <- ggplot(dat, aes(dose, len)) + geom_point() +
+  geom_smooth() + facet_grid(. ~ supp)
+
+point
+```
+
+```{r, echo=FALSE, warning=FALSE}
+box <- ggplot(dat, aes(dose, len)) + geom_boxplot(fill = "light blue") + 
+  facet_grid(. ~ supp)
+
+box
+```
+```{r, echo=FALSE, warning=FALSE}
+boxes <- ggplot(dat, aes(dose, len)) + geom_boxplot(aes(group = cut_width(dose, 0.5)), fill = "light blue") + 
+  facet_grid(. ~ supp)
+
+boxes
+```
+
+```{r, echo=FALSE, warning=FALSE}
+grid.newpage()
+pushViewport(viewport(layout = grid.layout(3, 2)))
+vplayout <- function(x, y) viewport(layout.pos.row = x, layout.pos.col = y)
+
+print(point, vp = vplayout(1,1:2))
+print(box, vp = vplayout(2,1:2))
+print(boxes, vp = vplayout(3,1:2))
+```
+
+```{r, echo=FALSE, warning=FALSE}
+t.test(len ~ supp, paired = TRUE, data = dat)
+```
+###Conclusion:
+The charts and T Test show that there is a statistically meaningful difference between the two sample groups. The difference is extreme enough that we wouldn't realistically attribute it to noise.
+
