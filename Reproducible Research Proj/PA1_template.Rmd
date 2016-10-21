@@ -1,0 +1,70 @@
+```{R}
+act <- read.csv("activity.csv")
+```
+
+```{R}
+library(ggplot2)
+library(plyr)
+library(dplyr)
+
+byday <- tapply(act$steps, act$date, sum)
+byday <- ldply(byday)
+names(byday) <- c("day", "steps")
+qplot(byday$steps, xlab = "steps", bins = 7, na.rm = TRUE, color = I("white"))
+```
+
+```{R}
+mean(byday$steps, na.rm = TRUE)
+median(byday$steps, na.rm = TRUE)
+```
+
+```{R}
+cleanact <- subset(act, !is.na(act$steps))
+averages <- tapply(cleanact$steps, cleanact$interval, mean)
+dfaverage <- ldply(averages)
+names(dfaverage) <- c("interval", "steps")
+plot(dfaverage$interval, dfaverage$steps, type = "l", xlab = "interval", ylab = "steps")
+```
+
+```{R}
+head(arrange(dfaverage, desc(steps)),5)
+```
+
+Interval 835 has the most steps(~206)
+
+```{R}
+length(subset(act$steps, is.na(act$steps)))
+```
+
+```{R}
+missing <- act[is.na(act$steps),]
+imputed <- merge(missing, dfaverage, by = "interval")
+imputed <- imputed[,c(4, 3, 1)]
+names(imputed) <- c("steps", "date", "interval")
+act[is.na(act$steps),] <- imputed
+```
+
+```{R}
+byday2 <- tapply(act$steps, act$date, sum)
+byday2 <- ldply(byday2)
+names(byday2) <- c("day", "steps")
+qplot(byday2$steps, xlab = "steps", bins = 7, color = I("white"))
+```
+
+```{r}
+##The mean and median increases when replacing N/As
+mean(byday2$steps)
+median(byday2$steps)
+```
+
+```{R}
+act$date <- strptime(act$date, format = "%Y-%m-%d")
+act <- transform(act, date = weekdays(date))
+act <- mutate(act, splitweek=ifelse(date %in% c("Monday","Tuesday","Wednesday","Thursday","Friday"), "Weekday","Weekend"))
+act$splitweek <- as.factor(act$splitweek)
+dataforplot <- act %>%
+      group_by(interval, splitweek) %>%
+      summarize(avg = mean(steps))
+with(dataforplot, qplot(interval, avg, facets = (. ~ splitweek), geom = "smooth"))
+```
+
