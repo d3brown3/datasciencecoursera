@@ -1,0 +1,74 @@
+---
+output: pdf_document
+---
+#Motor Trend Car Road Tests: Automatic MPG vs Manual MPG
+####Executive Summary
+The goal of this analysis is to specifically identify which type of transmission (automatic vs manual) is better for MPG. Using the dataset mtcars, a model that isolates the variables which predict mpg will be developed. This report details the exploratory analysis phase, generating various models, testing model variation for model selection, conducting model diagnostics and examining the variability of the outcome. Using this approach, my analysis shows that automatic transmission produces a lower mpg than manual transmission. The analysis shows that manual transmission has almost a 10% higher mpg on average however this estimation has a wide confidence interval.
+```{r, echo=FALSE}
+##load necessary packages
+library(ggplot2)
+library(car)
+```
+
+```{r, echo=FALSE}
+##prep data
+dat <- mtcars
+dat$am <- as.factor(dat$am)
+levels(dat$am) <- c("automatic", "manual")
+dat$vs <- as.factor(dat$vs)
+```
+##Exploratory Analysis
+```{r}
+##boxplot
+ggplot(dat, aes(am, mpg)) + 
+  geom_boxplot(fill = "light blue") + 
+  ggtitle("Transmission: Auto[0] vs Manual[1]") + xlab("transmission")
+```
+Boxplot shows Manual Transmission on average has higher MPG.
+
+##Model Selection
+```{r, echo=FALSE}
+##generate models
+fit2.1 <- glm((mpg*10) ~ am + wt -1, "poisson", dat)
+fit2.2 <- update(fit2.1, (mpg*10) ~ am + wt + qsec - 1)
+fit2.3 <- update(fit2.1, (mpg*10) ~ am + wt + qsec + carb - 1)
+fit2.4 <- update(fit2.1, (mpg*10) ~ am + wt + qsec + carb + drat - 1)
+fit2.5 <- update(fit2.1, (mpg*10) ~ am + wt + qsec + carb + drat + gear - 1)
+##evaluate variance; test models
+anova(fit2.1, fit2.2, fit2.3, fit2.4, fit2.5, test = "Chisq")
+##model 2 (fit2.2) wins
+```
+Anova shows that Model 2 (fit2.2) is the best model as far as minimizing residual deviation and deviance while keeping degrees of freedom higher. Model avoids bias by including necessary variables and avoids overfitting.
+
+##Coefficient Interpetation
+On average, manual tramsissions have almost 10% higher mpg than automatic (please note that the confidence interval is wide). Additionally, lower bound and upper bound of the 95% confidence interval is higher.
+```{r}
+##manual vs automatic
+1 / (exp(coef(fit2.2))[1] / exp(coef(fit2.2))[2])
+##create confidence interval
+exp(confint(fit2.2))
+```
+##Appendix
+```{r}
+##pairs plot
+pairs(dat)
+```
+Pairs plot shows a matrix of scatterplots to help visualize correlation across predictors (hp, disp, drat, wt are correlated).
+```{r}
+##correlation matrix
+cor(dat[,c(2:7,10:11)])
+```
+```{r}
+##calculate variance inflation for each variable (except vs and am)
+sqrt(vif(glm((mpg*10) ~ . -am, "poisson", dat)))
+```
+```{r}
+##model summary
+summary(fit2.2)
+```
+##Model Diagnostics
+```{r}
+##model diagnostics includes plot of Residuals vs Fitted
+par(mfrow = c(2, 2))
+plot(fit2.2)
+```
