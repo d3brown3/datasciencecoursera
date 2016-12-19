@@ -1,0 +1,85 @@
+---
+title: "Practical Machine Learning - RF Classification"
+author: "David Brown"
+date: "December 18, 2016"
+output: html_document
+---
+
+```{r, echo=FALSE, message=FALSE, warning=FALSE}
+library(mlbench)
+library(caret)
+library(plyr)
+library(dplyr)
+library(ggplot2)
+library(reshape2)
+library(lubridate)
+library(parallel)
+library(doParallel)
+library(RANN)
+library(randomForest)
+
+##read in data
+setwd("~/Coursera/Machine Learning/Data")
+testing <- read.csv("testingdata.csv", na.strings = c("", "NA", "#DIV/0!"))
+training <- read.csv("trainingdata.csv", na.strings = c("", "NA", "#DIV/0!"))
+
+##some manual processing
+df <- data.frame(testing = sapply(testing, class), 
+                 training = sapply(training, class))
+
+training[,c(8:159)] <- apply(training[,c(8:159)], 2, as.numeric)
+testing[,c(8:159)] <- apply(testing[,c(8:159)], 2, as.numeric)
+```
+
+In order to focus on the features that I wanted to include in the model, I removed the first 7 columns from the training set and test set.
+```{r, echo=FALSE}
+list(training = head(training[,c(1:7)]), testing = head(testing[,c(1:7)]))
+```
+```{r, echo=FALSE}
+training <- training[,-c(1:7)]
+testing <- testing[,-c(1:7)]
+```
+Additionally, I chose to remove features that had a significant amount of NAs. Any column with > 50% NAs was removed. I applied this to the training and test sets.
+```{r, echo=FALSE}
+training <- training[,colSums(is.na(training)) < (dim(training)[2])/2]
+testing <- testing[, which(names(testing) %in% names(training))]
+```
+
+The algorithm that I chose to run was the Random Forest algorithm. Due to extremely slow performance on my laptop, I used Parallel Processing. Parallel Processing allowed me to efficiently utilize my computer's available processing capacity to more quickly train the model using RF. In addition to Parallel processing, to improve runtime while maintaining accuracy, I specified 10 folds for k-fold cross validation.
+
+Finally, for the preProcess argument in the train fuction, I used knnImpute, center, scale, and BoxCox. 
+```{r, echo=FALSE, message=FALSE}
+x <- training[,-53]
+y <- training[,53]
+
+set.seed(1234)
+
+cluster <- makeCluster(detectCores() - 1) # convention to leave 1 core for OS
+registerDoParallel(cluster)
+
+fitControl <- trainControl(method = "cv",
+                           number = 10,
+                           allowParallel = TRUE)
+fit <- train(x, y, method="rf", preProcess = c("knnImpute", "center", "scale", "BoxCox"), trControl = fitControl)
+
+stopCluster(cluster)
+```
+
+The below summary shows the different parameters in the model and how the accuracy varied by the number variables sampled at each split. Accuracy was the highest when the value for mtry equaled 2.
+```{r, echo=FALSE}
+fit
+```
+
+Model accuracy was consistent across the 10 folds / samples.
+```{r, echo=FALSE}
+fit$resample
+```
+
+The confusion matrix suggests that the model is predicting with high accuracy. Additionally, the output from the finalModel summary shows the Out-of-bag error rate is 0.44%. This means that the expected out of sample error rate is low.
+```{r, echo=FALSE}
+confusionMatrix.train(fit)
+fit$finalModel
+```
+
+
+
