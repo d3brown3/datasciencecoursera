@@ -1,12 +1,17 @@
 ---
 
-##January 8, 2017  
-
+title: "Meteorites"
+author: David Brown
+date: January 22, 2017
+output: github_document
+always_allow_html: yes
+          
 ---
 
 ```{r, echo=FALSE, message=FALSE, warning=FALSE}
 library(leaflet)
 library(dplyr)
+library(rmarkdown)
 
  setwd("C:/Users/dbrow/datasciencecoursera/Data Products/meteorites")
 
