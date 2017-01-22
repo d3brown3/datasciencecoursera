@@ -3,12 +3,13 @@
 title: "Meteorites"
 author: David Brown
 date: January 22, 2017
-output: github_document
-always_allow_html: yes
-          
+output: 
+      html_document:
+        variant: "markdown_github"
+
 ---
 
-```{r, echo=FALSE, message=FALSE, warning=FALSE}
+```{r, echo=FALSE, message=FALSE, warning=FALSE, run_pandoc=TRUE}
 library(leaflet)
 library(dplyr)
 library(rmarkdown)
@@ -28,5 +29,6 @@ mets %>%
   addTiles() %>%
   addMarkers(popup = ~as.character(year.mass), 
              clusterOptions = markerClusterOptions())
+
 ```
 
