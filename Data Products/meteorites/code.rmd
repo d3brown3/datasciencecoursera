@@ -2,14 +2,14 @@
 
 title: "Meteorites"
 author: David Brown
-date: January 22, 2017
+date: January 23, 2017
 output: 
-      html_document:
-        variant: "markdown_github"
+github_document: 
+always_allow_html: yes
 
 ---
 
-```{r, echo=FALSE, message=FALSE, warning=FALSE, run_pandoc=TRUE}
+```{r, echo=FALSE, message=FALSE, warning=FALSE}
 library(leaflet)
 library(dplyr)
 library(rmarkdown)
