@@ -1,0 +1,62 @@
+---
+title: "Sample Size Estimator"
+author: "David Brown"
+date: "March 8, 2017"
+output: ioslides_presentation
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE)
+library(ggplot2)
+library(plotly)
+```
+
+
+## Summary
+
+- The goal of this presentation is to demonstrate the convenience and provide the rationale for calculating power.
+- The size of a sample for an experiment depends on 4 key inputs: power, alpha, difference in means, and standard deviation.
+- Power and alpha relate to Type I and Type II error rates. With a large enough sample size we can detect smaller changes in test cases compared to control.
+- Additionally, if the data has more noise, we will need a larger sample size.
+
+
+## 
+
+```{r, echo=FALSE, warning=FALSE, fig.align='center', fontsize=8}
+mu0 <- 30
+                  g = ggplot(data.frame(mu = c(25, 40)), aes(x = mu))
+                  g = g + stat_function(fun=dnorm, geom = "line", 
+                                   args = list(mean = mu0, sd = 4 / sqrt(16)), size = 1, col = "red")
+                  g = g + stat_function(fun=dnorm, geom = "line", 
+                  args = list(mean = 32, sd = 4 / sqrt(16)), size = 1, col = "blue")
+                  xitc = mu0 + qnorm(1 - round(.05,digits = 2)) * 4 / sqrt(16)
+                  g = g + geom_vline(xintercept=xitc, size = 2)
+                  
+                  ggplotly(g)
+```
+- The above plot shows how the test distribution compares to the control distribution. The greater the difference in the averages the lower the chance of Type I or Type II error.
+
+
+
+##
+
+```{r, echo=FALSE, warning=FALSE, , fig.align='center'}
+rn <- seq(from = 1*.5, to = 1*1.5, length.out = 1000)
+                  d <- data.frame(rn, 
+                                   "0.95"=unlist(lapply(rn, function(data) power.t.test(d=data, sd = 10, power=0.95)$n)),
+                                   "0.9"=unlist(lapply(rn, function(data) power.t.test(d=data, sd = 10, power=0.9)$n)),
+                                   "0.8"=unlist(lapply(rn, function(data) power.t.test(d=data, sd = 10, power=0.8)$n)))
+
+                  ggplotly(ggplot() + 
+                                   geom_line(data = d, aes(x=rn,y=X0.8), col = "blue")+
+                                   geom_line(data = d, aes(x=rn,y=X0.9), col = "red")+
+                                   geom_line(data = d, aes(x=rn,y=X0.95), col = "green")+
+                                   ylab("n") + xlab("delta") + ggtitle("Sample Size"))
+```
+- This plot shows that as the difference between test and control shrinks we require larger sample sizes to obtain different levels of power.
+
+
+## Conclusion
+
+- The slides show why power is important and how the different inputs (n, m, sd, power) interact. In the design phase of an experiment we put in our experiment requirments to solve for the sample size that we need.
+- The app takes in this information and provides the sample. It also provides the above plots and allows the user to change the assumptions.

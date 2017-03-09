@@ -16,5 +16,3 @@ mets %>%
   addTiles() %>%
   addMarkers(popup = ~as.character(year.mass), 
              clusterOptions = markerClusterOptions())
-
-render("code.Rmd", c("html_document", "github_document"))
